@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 Dagen Advent Kalender</title>
+    <style>
+        /* CSS STYLING - ZWART & GEEL TEMA */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --yellow-main: #ffde00;
+            --yellow-hover: #e6c800;
+            --text-light: #ffffff;
+            --text-dark: #121212;
+            --locked-bg: #2d2d2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: var(--yellow-main);
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 222, 0, 0.3);
+        }
+
+        p.subtitle {
+            color: #aaaaaa;
+            font-size: 1.1rem;
+        }
+
+        /* HET GRID VOOR DE 100 VAKJES */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 10px;
+        }
+
+        /* EEN VAKJE */
+        .box {
+            background-color: var(--card-bg);
+            border: 2px solid var(--locked-bg);
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #888888;
+            cursor: not-allowed;
+            position: relative;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        /* Vakjes die open mogen (vandaag of verleden) */
+        .box.available {
+            border-color: var(--yellow-main);
+            color: var(--yellow-main);
+            cursor: pointer;
+        }
+
+        .box.available:hover {
+            background-color: var(--yellow-main);
+            color: var(--text-dark);
+            box-shadow: 0 0 15px rgba(255, 222, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Vakjes die al geopend zijn */
+        .box.opened {
+            background-color: var(--yellow-main) !important;
+            color: var(--text-dark) !important;
+            border-color: var(--yellow-main) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /* MODAL POPUP (HET SCHERM DAT OPENT) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border: 3px solid var(--yellow-main);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 0 30px rgba(255, 222, 0, 0.2);
+            animation: popup 0.3s ease-out;
+        }
+
+        @keyframes popup {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-day {
+            color: var(--yellow-main);
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+            white-space: pre-line;
+        }
+
+        .close-btn {
+            background-color: var(--yellow-main);
+            color: var(--text-dark);
+            border: none;
+            padding: 10px 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: var(--yellow-hover);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>100 Dagen Countdown</h1>
+        <p class="subtitle">Elke dag een nieuw vakje. Kun jij de verleiding weerstaan om vooruit te kijken?</p>
+    </header>
+
+    <!-- Hier worden de 100 vakjes automatisch ingeladen via JavaScript -->
+    <div class="calendar-grid" id="calendarGrid"></div>
+
+    <!-- Het pop-up scherm voor de tekst van de dag -->
+    <div class="modal" id="textModal">
+        <div class="modal-content">
+            <div class="modal-day" id="modalDayTitle">Dag X</div>
+            <div class="modal-text" id="modalDayText">Hier komt de tekst van de dag...</div>
+            <button class="close-btn" onclick="closeModal()">Sluiten</button>
+        </div>
+    </div>
+
+    <script>
+        // JOUW TEKSTEN HIER (Dag 1 t/m 100)
+        const adventTeksten = [
+            "**EEN NIEUW SCHOOLJAAR**\n\n*Spreuken 3:5-6* — Vertrouw op de HEER met heel je hart en ken Hem in al je wegen.\n\n**PRAY**\nHeer, nu ik weer naar school, mijn opleiding of stage ga, bid ik dat ik de zegen mag ervaren van het vertrouwen op U. Geef mij rust bij alles wat nieuw en spannend is en help mij erop te vertrouwen dat U de weg voor mij kent. Amen.", // Dag 1
+            "**GODS NABIJHEID**\n\n*Jozua 1:9* — Wees sterk en moedig, want de HEER, je God, is met je waar je ook gaat.\n\n**PRAY**\nVader, laat mij vandaag merken dat ik niet alleen ben. Help mij te ontdekken dat Uw Woord waar is en dat ik sterk en moedig mag zijn omdat U mijn God bent en met mij meegaat. Geef mij moed wanneer ik een nieuwe klas binnenstap, nieuwe mensen ontmoet of tegen moeilijke situaties aanloop. Amen.", // Dag 2
+            "**FOCUS EN CONCENTRATIE**\n\n*Kolossenzen 3:23* — Doe alles wat je doet van harte, alsof het voor de Heer is.\n\n**PRAY**\nHeer, help mij om mijn schoolwerk, opleiding, stage of werk van harte te doen, zoals Uw Woord mij leert. Geef mij focus en concentratie tijdens lessen en bij het making van huiswerk. Laat mij ontdekken dat leren, werken en het ontwikkelen van mijn talenten ook iets is wat ik voor U mag doen. Help mij om niet alleen bezig te zijn met cijfers of prestaties, maar trouw te zijn in wat U mij vandaag geeft. Amen.", // Dag 3
+            "**PRESTATIEDRUK**\n\n*Mattheüs 11:28* — Kom naar Mij, jullie die vermoeid zijn en onder lasten gebukt gaan, dan zal Ik jullie rust geven.\n\n**PRAY**\nJezus, U nodigt mensen die vermoeid zijn en onder lasten gebukt gaan uit om bij U te komen. Daarom kom ik vandaag bij U met alles wat mij moe maakt: prestatiedruk, verwachtingen, toetsen en alles wat van mij gevraagd wordt. Help mij te ontdekken dat ik mijn lasten bij U mag brengen en dat U rust geeft. Laat mij weten dat mijn waarde niet wordt bepaald door een cijfer, diploma of prestatie. Geef rust in mijn hoofd en hart. Amen.", // Dag 4
+            "**NIEUWE VRIENDSCHAPPEN**\n\n*Spreuken 17:17* — Een vriend is je altijd toegedaan.\n\n**PRAY**\nHeer, Uw Woord laat zien hoe kostbaar echte vriendschap is. Geef mij vrienden die trouw zijn, ook wanneer het leven moeilijk wordt. Geef mij vrienden bij wie ik mezelf kan zijn, die naar mij luisteren, mij steunen en het goede in mij naar boven halen. Leer mij ook om zelf zo'n trouwe vriend voor anderen te zijn. Amen.", // Dag 5
+            "**BIJBAAN, WERK EN VERANTWOORDELIJKHEID**\n\n*Lukas 16:10* — Wie trouw is in het minste, is ook trouw in het grote.\n\n**PRAY**\nHeer, Uw Woord leert ons dat trouw zijn in kleine dingen belangrijk is. Ik bid voor jongeren met een bijbaan, stage of andere verantwoordelijkheden. Help hen om betrouwbaar te zijn, afspraken na te komen en zorgvuldig om te gaan met wat hun wordt toevertrouwd. Geef goede contacten met collega's en leidinggevenden en laat hen ontdekken dat juist in de gewone, kleine dingen zichtbaar mag worden dat zij met U leven. Amen.", // Dag 6
+            "**OUDERS, OPVOEDERS, DOCENTEN, MENTOREN EN BEGELEIDERS**\n\n*Jakobus 1:5* — Komt iemand van u wijsheid tekort, laat hij die dan vragen aan God.\n\n**PRAY**\nHeer, U nodigt ons uit om U om wijsheid te vragen. Daarom vragen wij vandaag om wijsheid voor ouders, opvoeders, docenten, mentoren, coaches, jeugdleiders en begeleiders die met jongeren optrekken. Geef hun wijsheid om verder te kijken dan gedrag, resultaten of cijfers. Help hen te zien what er werkelijk in een jongere omgaat. Geef hun de juiste woorden, geduld en inzicht om jongeren op een goede manier te begeleiden. Amen.", // Dag 7
+            "**WIE BEN IK?**\n\n*Psalm 139:14* — Ik loof U omdat ik ontzagwekkend wonderlijk gemaakt ben.\n\n**PRAY**\nVader, ik dank U dat iedere jongere wonderlijk door U gemaakt is. Ik bid dat jongeren deze waarheid niet alleen met hun hoofd kennen, maar ook in hun hart gaan geloven. Wanneer ze naar zichzelf kijken en vooral zien wat ze niet mooi, goed of bijzonder genoeg vinden, herinner hen er dan aan hoe U naar hen kijkt. Laat hen mogen ontdekken: ik ben door God gemaakt en daarom is mijn leven kostbaar. Amen.", // Dag 8
